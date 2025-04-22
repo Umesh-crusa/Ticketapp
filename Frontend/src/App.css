@@ -130,11 +130,24 @@ font-weight: bold;
   font-size: x-large;
   font-weight: 600;
 }
-.first{
+/* .first{
   display: flex;
-  height: 10vh;
+  border: 2px solid blue;
+  width: 50%;
+  flex-direction:column;
+  height: 50vh;
   align-items: center;
   justify-content:center;
+} */
+.seats{
+  display: flex;
+  align-items:self-end;
+}
+.show-seat{
+  height: 5vh;
+  align-items: center;
+  display: flex;
+  justify-content: center;
 }
 .inp{
  
@@ -143,8 +156,8 @@ font-weight: bold;
   
 }
 .res{
-  width: 25vw;
   height: 5vh;
+  width: 100%;
   color: white;
 }
 
@@ -169,14 +182,12 @@ font-weight: bold;
   background-color: #3182ce;
   color: white;
 }
-.show-seat{
-  height: 5vh;
-  align-items: center;
-  display: flex;
-  justify-content: center;
-}
+
 .show{
-  display: flex;
+  
+  min-width: 20vw;
+  justify-content: flex-start;
   gap:5px;
   align-items: center;
+ 
 }
