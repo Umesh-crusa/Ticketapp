@@ -20,6 +20,7 @@ function App() {
   const [seatcounts, setseatcounts] = useState(1);
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [bookedSeats, setBookedSeats] = useState([]);
+  const [loading, setLoading] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
   const finalRef = React.useRef(null);
@@ -28,7 +29,18 @@ function App() {
     try {
       let res = await axios.get("https://unstop-server-git-main-vishaltandale987.vercel.app/seat");
       setgetseat(res.data);
-      setstatus(res.data.map(seat => seat.status));
+      const seatStatuses = res.data.map(seat => seat.status);
+      setstatus(seatStatuses);
+
+      if (seatStatuses.every(seat => seat === "booked")) {
+        toast({
+          title: 'All tickets are sold out!',
+          status: 'info',
+          duration: 4000,
+          isClosable: true,
+          position: 'top',
+        });
+      }
     } catch (error) {
       console.log(error);
     }
@@ -77,7 +89,8 @@ function App() {
     }
   };
 
-  const handleBookSeat = () => {
+  const handleBookSeat = async () => {
+    setLoading(true);
     const selectedCount = selectedSeats.length;
     const enteredCount = parseInt(seatcounts);
 
@@ -89,14 +102,19 @@ function App() {
         isClosable: true,
         position: 'top',
       });
+      setLoading(false);
       return;
     }
 
-    if (selectedCount > 0) {
-      update_seat_handle(selectedSeats);
-    } else {
-      const autoSelected = bookSeats(enteredCount);
-      update_seat_handle(autoSelected);
+    try {
+      if (selectedCount > 0) {
+        await update_seat_handle(selectedSeats);
+      } else {
+        const autoSelected = bookSeats(enteredCount);
+        await update_seat_handle(autoSelected);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -173,7 +191,6 @@ function App() {
     <div className='main-box'>
       <div className='second'>
         <h1 className='text'>Ticket Booking</h1>
-
         <div id="coach" className="coach">
           {getseat.map((seat, index) => (
             <div
@@ -185,7 +202,6 @@ function App() {
             </div>
           ))}
         </div>
-
         <div className='flex'>
           <p className="seatstext1">Available Seats = {availableSeatsCount}</p>
           <p className="seatstext">Booked Seats = {totalBookedSeats} </p>
@@ -195,80 +211,62 @@ function App() {
       <div className='first'>
         <div className="input">
           <div className='show'>
-            <h3><b>Seat Booking</b></h3>
-            <div
-              className='show-seat'
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "8px",
-                paddingTop: "10px"
-              }}
+            <div className='seats'>
+              <h3><b>Seat Booking</b></h3>
+              <div className='show-seat'>
+                {bookedSeats.length > 0 ? (
+                  bookedSeats.map(index => (
+                    <div key={index} className="seat booked">
+                      {getseat[index]?.seatNumber}
+                    </div>
+                  ))
+                ) : (
+                  <span style={{ color: "#888" }}></span>
+                )}
+              </div>
+            </div>
+
+            <div className='inp' style={{
+              display: "flex",
+              gap: "12px",
+              alignItems: "center",
+              margin: "auto",
+              width: "100%",
+              flexWrap: "wrap"
+            }}>
+              <div className='fil' style={{ flex: 1 }}>
+                <Input
+                  placeholder="Enter number of seats"
+                  onChange={(e) => setseatcounts(e.target.value)}
+                  w="100%"
+                  border="1px"
+                  borderColor="gray.800"
+                  type="number"
+                  min={1}
+                  max={7}
+                />
+              </div>
+              <div className='bok'>
+                <Button
+                  onClick={handleBookSeat}
+                  size="md"
+                  colorScheme="facebook"
+                  mt={5}
+                  mb={5}
+                  isLoading={loading}
+                  loadingText="Booking"
+                >
+                  Book Ticket
+                </Button>
+              </div>
+            </div>
+            <Button className='res'
+              onClick={handlereset}
+              colorScheme="facebook"
             >
-              {bookedSeats.length > 0 ? (
-                bookedSeats.map(index => (
-                  <div
-                    key={index}
-                    className="seat booked"
-                    style={{
-                      width: "4vw",
-                      height: "5vh",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      borderRadius: "8px",
-                      backgroundColor: "yellow",
-                      fontWeight: "500"
-                    }}
-                  >
-                    {getseat[index]?.seatNumber}
-                  </div>
-                ))
-              ) : (
-                <span style={{ color: "#888" }}>No seats</span>
-              )}
-            </div>
+              Reset Booking
+            </Button>
           </div>
-
-          <div className='inp' style={{
-            display: "flex",
-            gap:"12px",
-            alignItems: "center",
-            margin: "auto",
-            width: "100%",
-            flexWrap: "wrap"
-          }}>
-
-            <div className='fil'>
-              <Input
-                placeholder="Enter number of seats"
-                onChange={(e) => setseatcounts(e.target.value)}
-                w={290}
-                border="1px"
-                borderColor="gray.800"
-                type="number"
-                min={1}
-                max={7}
-              />
-            </div>
-            <div className='bok'>
-              <Button
-                onClick={handleBookSeat}
-                size="md"
-                colorScheme="facebook"
-                mt={5}
-                mb={5}
-              >
-                Book Ticket
-              </Button>
-            </div>
-          </div>
-          <Button className='res'
-            onClick={handlereset}
-            colorScheme="facebook"
-          >
-            Reset Booking
-          </Button>
         </div>
       </div>
 
